@@ -1,7 +1,7 @@
 ---
 layout: post
 title: OpenSource Writeup
-date: 2022-10-09 11:51:00 -500
+date: 2022-10-07 11:51:00 -500
 categories: [HTB, Machines]
 tags: [git, LFI, RCE, Docker, Port Forwarding, Tunneling, git hooks]
 ---
