@@ -120,7 +120,7 @@ After exploring the machine we can quickly realize that we are in a `Docker` con
 
 ## Network enumration 
 * The docker instance runs on its own interface (probably `docker0`)
-* The docker interface has the netowkr ip `172.17.0`
+* The docker interface has the network ip `172.17.0`
 
 * Wrote a quick shell script to ping sweep the network and see who is up.
 ```shell
@@ -133,6 +133,7 @@ done
 We can see hosts from `.1` to `.9` are up.
 
 Wrote another script to scan the ports on these hosts.
+
 ```shell
 #!/bin/bash
 
