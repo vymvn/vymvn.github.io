@@ -123,6 +123,7 @@ After exploring the machine we can quickly realize that we are in a `Docker` con
 * The docker interface has the network ip `172.17.0`
 
 * Wrote a quick shell script to ping sweep the network and see who is up.
+
 ```shell
 #!/bin/bash
 
@@ -130,9 +131,11 @@ for host in $(seq 0 255); do
 	    ping -c 1 172.17.0.$host | grep "bytes from" | cut -d " " -f 4 &
 done
 ```
+
 We can see hosts from `.1` to `.9` are up.
 
 Wrote another script to scan the ports on these hosts.
+
 
 ```shell
 #!/bin/bash
