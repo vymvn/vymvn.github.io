@@ -56,7 +56,7 @@ Since we have the source code we can see how it is being filtered.
 def get_file_name(unsafe_filename):
     return recursive_replace(unsafe_filename, "../", "")
 ```
-this function sanitizes the file name from the users post request (uploading a file).
+This function sanitizes the file name from the users post request (uploading a file).
 
 We can see that it only filters `../`
 

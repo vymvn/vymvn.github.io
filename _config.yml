@@ -120,6 +120,8 @@ pwa:
 
 paginate: 10
 
+markdown: GFM
+
 # ------------ The following options are not recommended to be modified ------------------
 
 kramdown:
