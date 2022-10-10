@@ -120,18 +120,19 @@ pwa:
 
 paginate: 10
 
-markdown: GFM
 
 # ------------ The following options are not recommended to be modified ------------------
 
 kramdown:
+  input: GFM
   syntax_highlighter: rouge
-  syntax_highlighter_opts:   # Rouge Options › https://github.com/jneen/rouge#full-options
-    css_class: highlight
-    # default_lang: console
+  syntax_highlighter_opts:
+    default_lang: text
     span:
-      line_numbers: false
+      default_lang: text
+      # line_numbers: true
     block:
+      default_lang: text
       line_numbers: true
       start_line: 1
 
