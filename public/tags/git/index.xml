@@ -1,0 +1,16 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>git - Tag - vymvn</title>
+        <link>https://vymvn.xyz/tags/git/</link>
+        <description>git - Tag - vymvn</description>
+        <generator>Hugo -- gohugo.io</generator><language>en</language><managingEditor>vymvn6@gmail.com (vymvn)</managingEditor>
+            <webMaster>vymvn6@gmail.com (vymvn)</webMaster><copyright>lmao</copyright><atom:link href="https://vymvn.xyz/tags/git/" rel="self" type="application/rss+xml" /><item>
+    <title>OpenSource Writeup</title>
+    <link>https://vymvn.xyz/htb-opensource/</link>
+    <pubDate>Mon, 01 Jan 0001 00:00:00 &#43;0000</pubDate>
+    <author>vymvn</author>
+    <guid>https://vymvn.xyz/htb-opensource/</guid>
+    <description><![CDATA[Summary This machine&rsquo;s theme is that it is an opensource file transfer app, where one user can upload a file and they would get a URL they can share with others to download. Vulnrabilites in the code made it possible for an attacker to upload a backdoor and get command execution on a Docker container. Where the attacker could then pivot to a filtered Gitea service and log in to one of the users using found credentials in a previous commit in the git repository.]]></description>
+</item>
+</channel>
+</rss>

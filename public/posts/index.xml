@@ -1,0 +1,24 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>All Posts - vymvn</title>
+        <link>https://vymvn.xyz/posts/</link>
+        <description>All Posts | vymvn</description>
+        <generator>Hugo -- gohugo.io</generator><language>en</language><managingEditor>vymvn6@gmail.com (vymvn)</managingEditor>
+            <webMaster>vymvn6@gmail.com (vymvn)</webMaster><copyright>lmao</copyright><atom:link href="https://vymvn.xyz/posts/" rel="self" type="application/rss+xml" /><item>
+    <title>OpenSource Writeup</title>
+    <link>https://vymvn.xyz/htb-opensource/</link>
+    <pubDate>Mon, 01 Jan 0001 00:00:00 &#43;0000</pubDate>
+    <author>vymvn</author>
+    <guid>https://vymvn.xyz/htb-opensource/</guid>
+    <description><![CDATA[Summary This machine&rsquo;s theme is that it is an opensource file transfer app, where one user can upload a file and they would get a URL they can share with others to download. Vulnrabilites in the code made it possible for an attacker to upload a backdoor and get command execution on a Docker container. Where the attacker could then pivot to a filtered Gitea service and log in to one of the users using found credentials in a previous commit in the git repository.]]></description>
+</item>
+<item>
+    <title>Simple 64-bit buffer overflow with shellcode</title>
+    <link>https://vymvn.xyz/stack5/</link>
+    <pubDate>Mon, 01 Jan 0001 00:00:00 &#43;0000</pubDate>
+    <author>vymvn</author>
+    <guid>https://vymvn.xyz/stack5/</guid>
+    <description><![CDATA[Introduction Buffer overflow is a common vulnerability that has plagued software systems for years. It occurs when a program attempts to store data beyond the bounds of a buffer, causing the extra data to overwrite adjacent memory locations. This can lead to a variety of problems, including crashes, security breaches, and even the execution of malicious code. One of the most powerful ways to exploit a buffer overflow is by injecting shellcode into the overflowed buffer, which allows an attacker to take control of the program and execute arbitrary commands.]]></description>
+</item>
+</channel>
+</rss>

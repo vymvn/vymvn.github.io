@@ -1,0 +1,19 @@
+<urlset
+    xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+    xmlns:xhtml="http://www.w3.org/1999/xhtml"
+    ><url>
+            <loc>https://vymvn.xyz/categories/</loc><changefreq>weekly</changefreq><priority>0.5</priority></url><url>
+            <loc>https://vymvn.xyz/tags/docker/</loc><changefreq>weekly</changefreq><priority>0.5</priority></url><url>
+            <loc>https://vymvn.xyz/tags/git/</loc><changefreq>weekly</changefreq><priority>0.5</priority></url><url>
+            <loc>https://vymvn.xyz/tags/git-hooks/</loc><changefreq>weekly</changefreq><priority>0.5</priority></url><url>
+            <loc>https://vymvn.xyz/categories/htb/</loc><changefreq>weekly</changefreq><priority>0.5</priority></url><url>
+            <loc>https://vymvn.xyz/tags/lfi/</loc><changefreq>weekly</changefreq><priority>0.5</priority></url><url>
+            <loc>https://vymvn.xyz/categories/machines/</loc><changefreq>weekly</changefreq><priority>0.5</priority></url><url>
+            <loc>https://vymvn.xyz/htb-opensource/</loc><changefreq>weekly</changefreq><priority>0.5</priority></url><url>
+            <loc>https://vymvn.xyz/tags/port-forwarding/</loc><changefreq>weekly</changefreq><priority>0.5</priority></url><url>
+            <loc>https://vymvn.xyz/posts/</loc><changefreq>weekly</changefreq><priority>0.5</priority></url><url>
+            <loc>https://vymvn.xyz/tags/rce/</loc><changefreq>weekly</changefreq><priority>0.5</priority></url><url>
+            <loc>https://vymvn.xyz/stack5/</loc><changefreq>weekly</changefreq><priority>0.5</priority></url><url>
+            <loc>https://vymvn.xyz/tags/</loc><changefreq>weekly</changefreq><priority>0.5</priority></url><url>
+            <loc>https://vymvn.xyz/tags/tunneling/</loc><changefreq>weekly</changefreq><priority>0.5</priority></url><url>
+            <loc>https://vymvn.xyz/</loc><changefreq>weekly</changefreq><priority>0.5</priority></url></urlset>

