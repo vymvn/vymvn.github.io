@@ -175,8 +175,9 @@ I am using the `pwntools` library and I create a an ELF binary object, start the
 
 Currently our exploit will take us to the address where it will overwrite `rip` and then just go into the stack. So first part of our payload will be the address to write into `rip` and then we are going to need a nop slide to make sure we hit our shellcode and then finally, our shellcode.
 
-> When performing a buffer overflow attack, a NOP slide can help an attacker hit their shellcode by creating a region of uncertainty about the exact location of the code. By inserting a large block of NOP instructions in between the code and the shellcode, an attacker can increase the chances of their shellcode being executed, even if they do not know the exact location of the code they are trying to overwrite. - ChatGPT
-{: .prompt-info}
+{{< admonition question "What is a nopslide?" >}}
+When performing a buffer overflow attack, a NOP slide can help an attacker hit their shellcode by creating a region of uncertainty about the exact location of the code. By inserting a large block of NOP instructions in between the code and the shellcode, an attacker can increase the chances of their shellcode being executed, even if they do not know the exact location of the code they are trying to overwrite. - ChatGPT
+{{< /admonition >}}
 
 ### Step 1 - Find stack address
 
@@ -229,8 +230,9 @@ This address is the stack address. We can now update that in the exploit.
 rip = p64(0x7fffffffebe8 + 40) # new rip -> rsp
 ```
 
-> Notice I am also adding `+ 40` to the address just to make sure we hit our nop slide.
-{: .prompt-tip}
+{{< admonition tip >}}
+Notice I am also adding `+ 40` to the address just to make sure we hit our nop slide.
+{{< /admonition >}}
 
 ### Step 2 - nop slide
 
