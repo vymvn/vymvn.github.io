@@ -156,7 +156,7 @@ echo "wwwwaaaaaaaap" | nc saturn.picoctf.net 49781
 
 By the tags we are given a hint that this is a toctou (Time-of-check to time-of-use) attack, which is a race condition where the file at the time of check is different at the time of use. As we can see from the source code:
 
-```c
+```cpp
 // Check the file's owner.
   if (statbuf.st_uid != getuid()) {
     std::cerr << "Error: you don't own this file" << std::endl;
