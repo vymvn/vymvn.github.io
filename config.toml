@@ -269,7 +269,7 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
     XMPP = ""
     Matrix = ""
     Bilibili = ""
-    Discord = ""
+    Discord = "vymvn"
     DiscordInvite = ""
     Lichess = ""
     ORCID = ""
@@ -280,7 +280,7 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
     HackTheBox = "402588"
     RootMe= ""
     Phone = ""
-    Email = "vymvn6@gmail.com"
+    Email = ""
     RSS = false # 
 
   #  Page global config
@@ -482,7 +482,7 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
   #  TypeIt config
   [params.typeit]
     # typing speed between each step (measured in milliseconds)
-    speed = 120
+    speed = 1000
     # blinking speed of the cursor (measured in milliseconds)
     cursorSpeed = 1000
     # character used for the cursor (HTML format is supported)
